@@ -42,7 +42,8 @@ const asideData = ref([
 const element = ref('element')
 watchEffect(() => {
   if (element.value.style) {
-    element.value.style.transform = transformScroll.value
+    // element.value.style.transform = transformScroll.value
+    element.value.style.top = transformScroll.value
   }
 })
 
@@ -54,7 +55,8 @@ const windowHeight = computed(() => {
   return height.value
 })
 const transformScroll = computed(() => {
-  return `translateY(-${$index.value * windowHeight.value}px)`
+  // return `translateY(-${$index.value * windowHeight.value}px)`
+  return `-${$index.value * windowHeight.value}px`
 })
 
 const isCloseTranstion = ref(false) //控制是否显示动画效果
@@ -70,6 +72,76 @@ function mousewheel(e) {
     }, 1100)
   }
 }
+
+//#region 移动端
+const startY = ref(0) //记录开始位置
+const endY = ref(0) //记录结束位置
+const moveDistance = ref(0) //滑动距离
+
+// 触摸开始
+function handleTouchStart(e) {
+  startY.value = e.touches[0].pageY || e.changedTouches[0].pageY
+}
+
+// 触摸抬起
+function handleTouchEnd(e) {
+  e.preventDefault()
+  // 抬起时开启动画
+  isCloseTranstion.value = false
+  // 计算结束距离
+  endY.value = e.changedTouches[0].pageY || e.touches[0].pageY
+  // 计算移动距离，判断应该上一页还是下一页，直接更改index即可在原先基础上整页移动
+  moveDistance.value = endY.value - startY.value
+  // 这里我做了一个最小值 大于50才翻页
+  if (Math.abs(moveDistance.value) >= 60) {
+    if ($index.value < 4 && moveDistance.value < 0) {
+      $index.value++
+    }
+    if ($index.value > 0 && moveDistance.value > 0) {
+      $index.value--
+    }
+  } else {
+    // 当临界值小于60意味着不需要翻页 就恢复原来的位置即可
+    // element.value.style.transform = `translateY(-${$index.value * windowHeight.value}px)`
+    element.value.style.top = `-${$index.value * windowHeight.value}px`
+  }
+}
+
+// 触摸移动
+function handleTouchMove(e) {
+  isCloseTranstion.value = true // 开始移动 关闭动画
+  // e.stopPropagation()
+  e.preventDefault()
+  // if (isIOS()) {
+  //   return
+  // }
+  moveDistance.value = (e.changedTouches[0].pageY || e.touches[0].pageY) - startY.value // 计算移动距离\
+  //判断临界点
+  const isCriticalPoint =
+    ($index.value === 4 && moveDistance.value < 0) || ($index.value === 0 && moveDistance.value > 0)
+  // 如果是临界点就直接返回
+  if (isCriticalPoint) {
+    return
+  }
+  // 否则直接对内层容器应用 随之移动
+  // element.value.style.transform = `translateY(-${$index.value * windowHeight.value + moveDistance.value * -1}px)`
+  element.value.style.top = `-${$index.value * windowHeight.value + moveDistance.value * -1}px`
+}
+//#endregion
+
+//ANOTHER writting about full-page
+// const { y } = useScroll(document)
+// watchThrottled(
+//   y,
+//   (newValue, oldValue) => {
+//     if (newValue > oldValue && newValue > 120) {
+//       next()
+//     } else {
+//       last()
+//     }
+//   },
+//   { throttle: 300 },
+// )
 
 function goScroll(e) {
   //e.wheelDelta 用来判断上一个下一个 <0 下一个 >0上一个
@@ -101,69 +173,6 @@ function changeBac(index) {
   isCloseTranstion.value = false
   $index.value = index
 }
-
-//#region 移动端
-const startY = ref(0) //记录开始位置
-const endY = ref(0) //记录结束位置
-const moveDistance = ref(0) //滑动距离
-
-// 触摸开始
-function handleTouchStart(e) {
-  startY.value = e.touches[0].pageY || e.changedTouches[0].pageY
-}
-
-// 触摸抬起
-function handleTouchEnd(e) {
-  // 抬起时开启动画
-  isCloseTranstion.value = false
-  // 计算结束距离
-  endY.value = e.changedTouches[0].pageY || e.touches[0].pageY
-  // 计算移动距离，判断应该上一页还是下一页，直接更改index即可在原先基础上整页移动
-  moveDistance.value = endY.value - startY.value
-  // 这里我做了一个最小值 大于50才翻页
-  if (Math.abs(moveDistance.value) >= 60) {
-    if ($index.value < 4 && moveDistance.value < 0) {
-      $index.value++
-    }
-    if ($index.value > 0 && moveDistance.value > 0) {
-      $index.value--
-    }
-  } else {
-    // 当临界值小于60意味着不需要翻页 就恢复原来的位置即可
-    element.value.style.transform = `translateY(-${$index.value * windowHeight.value}px)`
-  }
-}
-
-// 触摸移动
-function handleTouchMove(e) {
-  e.preventDefault()
-  isCloseTranstion.value = true // 开始移动 关闭动画
-  moveDistance.value = (e.changedTouches[0].pageY || e.touches[0].pageY) - startY.value // 计算移动距离\
-  //判断临界点
-  const isCriticalPoint =
-    ($index.value === 4 && moveDistance.value < 0) || ($index.value === 0 && moveDistance.value > 0)
-  // 如果是临界点就直接返回
-  if (isCriticalPoint) {
-    return
-  }
-  // 否则直接对内层容器应用 随之移动
-  element.value.style.transform = `translateY(-${$index.value * windowHeight.value + moveDistance.value * -1}px)`
-}
-
-//#endregion
-//ANOTHER writting about full-page
-// const { y } = useScroll(document)
-// watchThrottled(
-//   y,
-//   (newValue, oldValue) => {
-//     if (newValue > oldValue && newValue > 120) {
-//       next()
-//     } else {
-//       last()
-//     }
-//   },
-//   { throttle: 300 },
-// )
 </script>
 <template>
   <!-- 最外层容器 -->
@@ -172,6 +181,7 @@ function handleTouchMove(e) {
     <div
       ref="element"
       :class="{ activeTranstion: isCloseTranstion }"
+      :style="{ height: windowHeight * 5 + 'px' }"
       class="inner-box"
       @mousewheel="mousewheel"
       @touchstart="handleTouchStart"
@@ -181,7 +191,7 @@ function handleTouchMove(e) {
       <!-- 滚动显示的元素 -->
       <div
         v-for="item in ysImage"
-        :style="{ backgroundImage: `url(${item.backgroundImage})` }"
+        :style="{ backgroundImage: `url(${item.backgroundImage})`, height: windowHeight + 'px' }"
         class="scroll-element"
       ></div>
     </div>
@@ -212,10 +222,9 @@ function handleTouchMove(e) {
   .inner-box {
     position: absolute;
     width: 100%;
-    height: 100%;
     transition: all ease-in-out 0.5s;
     .scroll-element {
-      height: 100%;
+      // height: 100%;
       background-size: cover !important;
       background-position: center;
       background-repeat: no-repeat;
