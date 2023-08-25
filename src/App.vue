@@ -181,7 +181,6 @@ function changeBac(index) {
     <div
       ref="element"
       :class="{ activeTranstion: isCloseTranstion }"
-      :style="{ height: windowHeight * 5 + 'px' }"
       class="inner-box"
       @mousewheel="mousewheel"
       @touchstart="handleTouchStart"
@@ -224,7 +223,6 @@ function changeBac(index) {
     width: 100%;
     transition: all ease-in-out 0.5s;
     .scroll-element {
-      // height: 100%;
       background-size: cover !important;
       background-position: center;
       background-repeat: no-repeat;
