@@ -1,6 +1,7 @@
 <script setup>
 import { useWindowSize } from '@vueuse/core'
 import { ref, computed, watchEffect } from 'vue'
+
 // IMAGE DATA
 const ysImage = ref([
   {
@@ -19,9 +20,16 @@ const ysImage = ref([
     backgroundImage:
       'https://webstatic.mihoyo.com/upload/contentweb/2022/08/15/8969f683b92839ac427c875d0d742be2_4825576482548821743.jpg',
   },
+  {
+    backgroundImage:
+      'https://act-webstatic.mihoyo.com/upload/contentweb/hk4e/721a74c43614d7aeb25b046cabfb57be_2012964858524199390.jpg',
+  },
 ])
 
 const asideData = ref([
+  {
+    title: '首页',
+  },
   {
     title: '蒙德',
   },
@@ -94,7 +102,7 @@ function handleTouchEnd(e) {
   moveDistance.value = endY.value - startY.value
   // 这里我做了一个最小值 大于50才翻页
   if (Math.abs(moveDistance.value) >= 60) {
-    if ($index.value < 4 && moveDistance.value < 0) {
+    if ($index.value < ysImage.value.length - 1 && moveDistance.value < 0) {
       $index.value++
     }
     if ($index.value > 0 && moveDistance.value > 0) {
@@ -118,7 +126,8 @@ function handleTouchMove(e) {
   moveDistance.value = (e.changedTouches[0].pageY || e.touches[0].pageY) - startY.value // 计算移动距离\
   //判断临界点
   const isCriticalPoint =
-    ($index.value === 4 && moveDistance.value < 0) || ($index.value === 0 && moveDistance.value > 0)
+    ($index.value === ysImage.value.length - 1 && moveDistance.value < 0) ||
+    ($index.value === 0 && moveDistance.value > 0)
   // 如果是临界点就直接返回
   if (isCriticalPoint) {
     return
@@ -156,7 +165,7 @@ function goScroll(e) {
 const $index = ref(0) //索引控制第几个显示
 // 下一个
 function next() {
-  if ($index.value < 4) {
+  if ($index.value < ysImage.value.length - 1) {
     $index.value++
   }
 }
@@ -223,6 +232,7 @@ function changeBac(index) {
     width: 100%;
     transition: all ease-in-out 0.5s;
     .scroll-element {
+      // height: 100%;
       background-size: cover !important;
       background-position: center;
       background-repeat: no-repeat;
